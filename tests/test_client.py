@@ -1,3 +1,4 @@
+from builtins import FileNotFoundError
 import os
 
 from pathlib import Path
@@ -22,14 +23,6 @@ class TestClient:
     def test_from_secret_json_file_not_found(self):
         with pytest.raises(FileNotFoundError):
             client.Client.from_secret_json(FAKE_CREDS)
-
-    def test_init(self, mocker):
-        mocker.patch.object(client.Client, '_get_connection',
-                            return_value=FAKE_CONNECTION)
-        a_client = client.Client(creds=FAKE_CREDS)
-
-        assert a_client.connection == FAKE_CONNECTION
-        a_client._get_connection.assert_called_once_with(FAKE_CREDS)
 
     def test__get_connection(self):
         a_client = client.Client.from_secret_json(

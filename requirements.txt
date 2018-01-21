@@ -15,5 +15,6 @@ pytest-mock==1.6.3
 requests==2.18.4
 rsa==3.4.2
 six==1.11.0
+sqlparse==0.2.4
 uritemplate==3.0.0
 urllib3==1.22
