@@ -1,10 +1,11 @@
-from pathlib import Path
+import os
 
+from pathlib import Path
 import pytest
 from oauth2client.client import HttpAccessTokenRefreshError
 
-from greader_3000 import client
-from greader_3000 import config
+from loony_sheets import client
+from loony_sheets import config
 
 
 FAKE_CONNECTION = 'connection'
@@ -36,8 +37,8 @@ class TestClient:
         assert a_client.connection
 
     def test__get_connection_wrong_key(self, mocker):
-        root_dir = Path('.').parent
-        TEST_SECRET = Path(root_dir, 'wrong_key_secret.json')
+        root_dir = Path(os.path.realpath(__file__)).parent
+        TEST_SECRET = Path(root_dir, 'wrong_client_secret.json')
         mocker.patch.object(config, 'SECRET', TEST_SECRET)
         with pytest.raises(HttpAccessTokenRefreshError):
             client.Client.from_secret_json(config.SECRET)

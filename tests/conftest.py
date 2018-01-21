@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from greader_3000 import config
+from loony_sheets import config
 
 
 @pytest.fixture

@@ -1,18 +1,16 @@
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
-from greader_3000 import config
+from loony_sheets.config import SCOPE
+from loony_sheets.config import SECRET
 
 
 class Client:
 
-    SCOPE = ['https://spreadsheets.google.com/feeds']
-
     @classmethod
-    def from_secret_json(cls, secret=None):
-        secret = secret or config.SECRET
+    def from_secret_json(cls, secret=SECRET, scope=SCOPE):
         creds = ServiceAccountCredentials.from_json_keyfile_name(
-            secret, cls.SCOPE)
+            secret, scope)
         return cls(creds=creds)
 
     def __init__(self, creds):
