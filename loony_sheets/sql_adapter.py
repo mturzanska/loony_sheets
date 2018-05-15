@@ -13,33 +13,44 @@ ParsedSqlStatement = namedtuple(
 class Column():
 
     @classmethod
-    def from_string(column_string):
-
-
-        pass
+    def from_string(cls, column_string):
+        table_column = [s.strip() for s in column_string.split('.')]
+        column = table_column.pop()
+        table = table_column[0] if table_column else None
+        return cls(table, column)
 
     def __init__(self, table, column):
-        pass
+        self.table = table
+        self.column = column
 
 
 class Condition():
 
     @classmethod
-    def from_string(condition_string):
-        pass
+    def from_string(cls, condition_string):
+        # TODO: add logic for 'is null' / 'is not null'
+        elements = [s.strip() for s in condition_string.split()]
+        if not elements:
+            return None
+        if len(elements) != 3:
+            raise RuntimeError('Unknown condition format')
+        return cls(*elements)
 
-    def __init__(self, compared, comparee, sign):
-        pass
+    def __init__(self, compared, sign=None, comparee=None):
+        self.compared = compared
+        self.sign = sign
+        self.comparee = comparee
 
 
 class Source():
 
     @classmethod
-    def from_string(source_string):
-        pass
+    def from_string(cls, source_string):
+        table = source_string.strip()
+        return cls(table)
 
     def __init__(self, table):
-        pass
+        self.table
 
 
 Keywords = ('select', 'from', 'where')
@@ -57,11 +68,15 @@ class SqlPart():
         self.parsed_elements = []
 
     def collect_elements(self, element):
-        if element != self.SEPARATOR:
+        if element != self.KEYWORD:
             self.raw_elements.append(element)
 
     def parse(self):
-        return self.PARSED_ENTITY.from_string(self.parsed_elements)
+        raw_sql = ' '.join(self.raw_elements)
+        self.parsed_elements = [
+            self.PARSED_ENTITY.from_string(element)
+            for element in raw_sql.split(self.SEPARATOR)
+        ]
 
 
 class Select(SqlPart):
@@ -77,7 +92,7 @@ class From(SqlPart):
 class Where(SqlPart):
 
     KEYWORD = 'where'
-    SEPRATOR = 'and'
+    SEPARATOR = 'and'
 
 
 class SqlStatement():
