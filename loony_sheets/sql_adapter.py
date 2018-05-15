@@ -1,5 +1,4 @@
 from collections import namedtuple
-import string
 
 
 ParsedSqlStatement = namedtuple(
@@ -11,48 +10,98 @@ ParsedSqlStatement = namedtuple(
 )
 
 
-class SqlStatement(object):
+class Column():
+
+    @classmethod
+    def from_string(column_string):
+
+
+        pass
+
+    def __init__(self, table, column):
+        pass
+
+
+class Condition():
+
+    @classmethod
+    def from_string(condition_string):
+        pass
+
+    def __init__(self, compared, comparee, sign):
+        pass
+
+
+class Source():
+
+    @classmethod
+    def from_string(source_string):
+        pass
+
+    def __init__(self, table):
+        pass
+
+
+Keywords = ('select', 'from', 'where')
+InitialParserState = dict.fromkeys(Keywords, False)
+
+
+class SqlPart():
+
+    KEYWORD = None
+    SEPARATOR = None
+    PARSED_ENTITY = None
+
+    def __init__(self):
+        self.raw_elements = []
+        self.parsed_elements = []
+
+    def collect_elements(self, element):
+        if element != self.SEPARATOR:
+            self.raw_elements.append(element)
+
+    def parse(self):
+        return self.PARSED_ENTITY.from_string(self.parsed_elements)
+
+
+class Select(SqlPart):
+
+    SEPARATOR = ','
+
+
+class From(SqlPart):
+
+    KEYWORD = 'from'
+
+
+class Where(SqlPart):
+
+    KEYWORD = 'where'
+    SEPRATOR = 'and'
+
+
+class SqlStatement():
 
     def __init__(self, sql_string):
         self.sql_string = sql_string.lower()
         self.parsed_sql_statement = self._parse_sql()
 
     def _parse_sql(self):
-        columns = []
-        sources = []
-        conditions = []
-        in_columns = in_sources = in_conditions = False
+        last_seen_keyword = 'select'
+        sql_parts = [Select(), From(), Where()]
+        sql_parts = {part.KEYWORD: part for part in sql_parts}
 
-        tokens = self.sql_string.split()
-        for token in tokens:
+        elements = self.sql_string.split()
+        for element in elements:
+            sql_part = sql_parts.get(last_seen_keyword)
+            sql_part.collect_elements(element)
 
-            if token == 'select':
-                in_columns = True
-                in_sources = False
-                in_conditions = False
-                continue
+        sql_parts = {
+            keyword: part.parse()
+            for keyword, part in sql_parts
+        }
 
-            if token == 'from':
-                in_columns = False
-                in_sources = True
-                in_conditions = False
-                continue
-
-            if token == 'where':
-                in_columns = False
-                in_sources = False
-                in_conditions = True
-                continue
-
-            if in_columns:
-                if token in string.punctuation:
-                    continue
-                columns.append(token)
-            if in_sources:
-                if token in string.punctuation:
-                    continue
-                sources.append(token)
-            if in_conditions:
-                conditions.append(token)
-
-        return ParsedSqlStatement(columns, sources, conditions)
+        return ParsedSqlStatement(
+                    sql_parts.get('select'),
+                    sql_parts.get('from'),
+                    sql_parts.get('where'))
