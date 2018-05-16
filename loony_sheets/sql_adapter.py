@@ -1,30 +1,26 @@
-from collections import namedtuple
+class ParsedSqlPart():
+
+    def __eq__(self, other):
+        if isinstance(self, other.__class__):
+            return self.__dict__ == other.__dict__
+        return False
 
 
-ParsedSqlStatement = namedtuple(
-    'ParsedSqlStatement', (
-        'columns',
-        'sources',
-        'conditions'
-    )
-)
-
-
-class Column():
+class Column(ParsedSqlPart):
 
     @classmethod
     def from_string(cls, column_string):
         table_column = [s.strip() for s in column_string.split('.')]
         column = table_column.pop()
         table = table_column[0] if table_column else None
-        return cls(table, column)
+        return cls(column, table)
 
-    def __init__(self, table, column):
+    def __init__(self, name, table=None):
         self.table = table
-        self.column = column
+        self.name = name
 
 
-class Condition():
+class Condition(ParsedSqlPart):
 
     @classmethod
     def from_string(cls, condition_string):
@@ -42,22 +38,21 @@ class Condition():
         self.comparee = comparee
 
 
-class Source():
+class Source(ParsedSqlPart):
+
+    # TODO: add logic for handling aliases
 
     @classmethod
     def from_string(cls, source_string):
-        table = source_string.strip()
+        schema_table = [s.strip() for s in source_string.split('.')]
+        table = schema_table[-1]
         return cls(table)
 
     def __init__(self, table):
-        self.table
+        self.table = table
 
 
-Keywords = ('select', 'from', 'where')
-InitialParserState = dict.fromkeys(Keywords, False)
-
-
-class SqlPart():
+class RawSqlPart():
 
     KEYWORD = None
     SEPARATOR = None
@@ -65,7 +60,6 @@ class SqlPart():
 
     def __init__(self):
         self.raw_elements = []
-        self.parsed_elements = []
 
     def collect_elements(self, element):
         if element != self.KEYWORD:
@@ -73,25 +67,29 @@ class SqlPart():
 
     def parse(self):
         raw_sql = ' '.join(self.raw_elements)
-        self.parsed_elements = [
+        return [
             self.PARSED_ENTITY.from_string(element)
             for element in raw_sql.split(self.SEPARATOR)
         ]
 
 
-class Select(SqlPart):
+class Select(RawSqlPart):
 
+    KEYWORD = 'select'
+    PARSED_ENTITY = Column
     SEPARATOR = ','
 
 
-class From(SqlPart):
+class From(RawSqlPart):
 
     KEYWORD = 'from'
+    PARSED_ENTITY = Source
 
 
-class Where(SqlPart):
+class Where(RawSqlPart):
 
     KEYWORD = 'where'
+    PARSED_ENTITY = Condition
     SEPARATOR = 'and'
 
 
@@ -99,7 +97,7 @@ class SqlStatement():
 
     def __init__(self, sql_string):
         self.sql_string = sql_string.lower()
-        self.parsed_sql_statement = self._parse_sql()
+        self.columns, self.sources, self.conditions = self._parse_sql()
 
     def _parse_sql(self):
         last_seen_keyword = 'select'
@@ -108,15 +106,18 @@ class SqlStatement():
 
         elements = self.sql_string.split()
         for element in elements:
+            if element in sql_parts:
+                last_seen_keyword = element
             sql_part = sql_parts.get(last_seen_keyword)
             sql_part.collect_elements(element)
 
         sql_parts = {
             keyword: part.parse()
-            for keyword, part in sql_parts
+            for keyword, part in sql_parts.items()
         }
 
-        return ParsedSqlStatement(
-                    sql_parts.get('select'),
-                    sql_parts.get('from'),
-                    sql_parts.get('where'))
+        return (
+            sql_parts.get('select'),
+            sql_parts.get('from'),
+            sql_parts.get('where')
+        )
