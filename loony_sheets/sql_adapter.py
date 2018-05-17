@@ -97,9 +97,16 @@ class SqlStatement():
 
     def __init__(self, sql_string):
         self.sql_string = sql_string.lower()
-        self.columns, self.sources, self.conditions = self._parse_sql()
+        self.columns = None
+        self.sources = None
+        self.conditions = None
 
-    def _parse_sql(self):
+    def __eq__(self, other):
+        if isinstance(self, other.__class__):
+            return self.__dict__ == other.__dict__
+        return False
+
+    def parse_sql(self):
         last_seen_keyword = 'select'
         sql_parts = [Select(), From(), Where()]
         sql_parts = {part.KEYWORD: part for part in sql_parts}
@@ -116,8 +123,6 @@ class SqlStatement():
             for keyword, part in sql_parts.items()
         }
 
-        return (
-            sql_parts.get('select'),
-            sql_parts.get('from'),
-            sql_parts.get('where')
-        )
+        self.columns = sql_parts.get('select')
+        self.sources = sql_parts.get('from')
+        self.conditions = sql_parts.get('where')
