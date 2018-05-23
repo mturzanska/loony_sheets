@@ -1,27 +1,11 @@
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
-
-from loony_sheets.config import SCOPE
-from loony_sheets.config import SECRET
-
-
-class Client:
-
-    @classmethod
-    def from_secret_json(cls, secret=SECRET, scope=SCOPE):
-        creds = ServiceAccountCredentials.from_json_keyfile_name(
-            secret, scope)
-        return cls(creds=creds)
-
-    def __init__(self, creds):
-        self.connection = Connection(creds)
+from loony_sheets.gsheets_wrapper import GsheetsWrapper
 
 
 class Connection:
 
-    def __init__(self, creds):
-        self._gsheets_client = gspread.authorize(creds)
-        self.cursor = self._cursor
+    def __init__(self):
+        self._gsheets_client = GsheetsWrapper.from_secret_json()
+        self.cursor = self._cursor()
 
     def close(self):
         self._gsheets_client = None
@@ -31,7 +15,7 @@ class Connection:
         pass
 
     def _cursor(self):
-        pass
+        return Cursor(self._gsheets_client)
 
 
 class Cursor:
