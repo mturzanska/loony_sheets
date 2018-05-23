@@ -19,6 +19,10 @@ class Column(ParsedSqlPart):
         self.table = table
         self.name = name
 
+    def __repr__(self):
+        class_name = type(self).__name__
+        return '{}({}, {})'.format(class_name, self.table, self.name)
+
 
 class Condition(ParsedSqlPart):
 
@@ -37,6 +41,11 @@ class Condition(ParsedSqlPart):
         self.sign = sign
         self.comparee = comparee
 
+    def __repr__(self):
+        class_name = type(self).__name__
+        return '{}({}, {}, {})'.format(
+            class_name, self.compared, self.sign, self.comparee)
+
 
 class Source(ParsedSqlPart):
 
@@ -50,6 +59,10 @@ class Source(ParsedSqlPart):
 
     def __init__(self, table):
         self.table = table
+
+    def __repr__(self):
+        class_name = type(self).__name__
+        return '{}({})'.format(class_name, self.table)
 
 
 class RawSqlPart():
@@ -95,7 +108,7 @@ class Where(RawSqlPart):
 
 class SqlStatement():
 
-    def __init__(self, sql_string):
+    def __init__(self, sql_string=''):
         self.sql_string = sql_string.lower()
         self.columns = None
         self.sources = None
