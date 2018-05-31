@@ -1,19 +1,9 @@
-from pathlib import Path
-
 import pytest
 
-from loony_sheets import config
 from loony_sheets.sql_adapter import Column
 from loony_sheets.sql_adapter import Condition
 from loony_sheets.sql_adapter import Source
 from loony_sheets.sql_adapter import SqlStatement
-
-
-@pytest.fixture
-def test_env(mocker):
-    root_dir = Path('.').parent
-    TEST_SECRET = Path(root_dir, 'client_secret.json')
-    mocker.patch.object(config, 'SECRET', TEST_SECRET)
 
 
 def get_raw_select(columns):
