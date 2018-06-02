@@ -5,7 +5,7 @@ from loony_sheets.config import SCOPE
 from loony_sheets.config import SECRET
 
 
-class GsheetsWrapper:
+class GsheetsClient:
 
     @classmethod
     def from_secret_json(cls, secret=SECRET, scope=SCOPE):
@@ -16,17 +16,45 @@ class GsheetsWrapper:
     def __init__(self, creds):
         # TODO: Catch an exception on failed authorization
         self._client = gspread.authorize(creds)
-        self.current_name = None
-        self.current_gsheet = None
 
-    def set_gsheet(self, gsheet_name):
-        if self.current_name == gsheet_name:
-            return
+    def open(self, name):
         try:
-            self.current_gsheet = self._client.open(gsheet_name)
+            return Sheet(self._client, name)
         except gspread.SpreadsheetNotFound:
-            raise RuntimeError('Spreadsheet not found')
-        self.current_name = gsheet_name
+            raise RuntimeError('Sheet not found')
+
+
+class Sheet:
+
+    def __init__(self, client, name):
+        self.name = name
+        self._gsheet = client.open(name)
+        self._tabs_map = self.map_tabs()
+        self.tabs = list(self._tabs_map.keys())
+        self._tabs_cache = {}
+
+    def map_tabs(self):
+        tabs_map = {}
+        tabs = self._gsheet.worksheets()
+        for idx, tab in enumerate(tabs):
+            tabs_map[tab.title] = idx
+        return tabs_map
 
     def get_tab(self, tab_name):
-        return self.current_gsheet.get_worksheet(tab_name)
+        if tab_name in self._tabs_cache:
+            return self._tabs_cache.get(tab_name)
+        tab_idx = self._tabs_map.get(tab_name)
+
+        try:
+            tab = self._gsheet.get_worksheet(tab_idx)
+        except Exception:
+            # TODO: check which exceptions to catch
+            raise RuntimeError('Tab not found')
+
+        self._tabs_cache[tab_name] = tab
+        return tab
+
+
+class Tab:
+
+    pass

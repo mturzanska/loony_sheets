@@ -1,10 +1,10 @@
-from loony_sheets.gsheets_wrapper import GsheetsWrapper
+from loony_sheets.gsheets_wrapper import GsheetsClient
 
 
 class Connection:
 
     def __init__(self):
-        self._gsheets_client = GsheetsWrapper.from_secret_json()
+        self._gsheets_client = GsheetsClient.from_secret_json()
         self.cursor = self._cursor()
 
     def close(self):
